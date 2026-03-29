@@ -1,6 +1,7 @@
 ﻿import { recordBall } from "@/lib/scoring";
 import { ScoreEventSchema } from "@/lib/scorer-schema";
-import { readStore, writeStore } from "@/lib/store";
+import { matchRepository } from "@/repositories/match-repository";
+import { teamRepository } from "@/repositories/team-repository";
 
 export async function POST(
   request: Request,
@@ -17,28 +18,20 @@ export async function POST(
     );
   }
 
-  const store = await readStore();
-  const matchIndex = store.matches.findIndex((candidate) => candidate.id === matchId);
+  const match = await matchRepository.getMatchById(matchId);
 
-  if (matchIndex < 0) {
+  if (!match) {
     return Response.json({ error: "Match not found." }, { status: 404 });
   }
 
-  const match = store.matches[matchIndex];
-  const result = recordBall(match, parsed.data, store.teams);
+  const teams = await teamRepository.listTeams();
+  const result = recordBall(match, parsed.data, teams);
 
   if (!result.ok) {
     return Response.json({ error: result.message }, { status: 400 });
   }
 
-  const updatedMatches = [...store.matches];
-  updatedMatches[matchIndex] = match;
-
-  await writeStore({
-    ...store,
-    matches: updatedMatches,
-  });
+  await matchRepository.updateMatch(match);
 
   return Response.json({ match });
 }
-

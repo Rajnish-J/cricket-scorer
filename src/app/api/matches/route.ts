@@ -1,17 +1,16 @@
 ﻿import { buildMatch } from "@/lib/scoring";
 import { MatchCreateSchema } from "@/lib/scorer-schema";
-import { readStore, updateStore } from "@/lib/store";
+import { matchRepository } from "@/repositories/match-repository";
+import { teamRepository } from "@/repositories/team-repository";
 
 export async function GET(request: Request): Promise<Response> {
   const url = new URL(request.url);
   const statusFilter = url.searchParams.get("status");
 
-  const store = await readStore();
-  const matches =
-    statusFilter && ["scheduled", "live", "completed"].includes(statusFilter)
-      ? store.matches.filter((match) => match.status === statusFilter)
-      : store.matches;
+  const isKnownStatus =
+    statusFilter === "scheduled" || statusFilter === "live" || statusFilter === "completed";
 
+  const matches = await matchRepository.listMatches(isKnownStatus ? statusFilter : undefined);
   return Response.json({ matches });
 }
 
@@ -26,9 +25,9 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
 
-  const store = await readStore();
-  const teamA = store.teams.find((team) => team.id === parsed.data.teamAId);
-  const teamB = store.teams.find((team) => team.id === parsed.data.teamBId);
+  const teams = await teamRepository.listTeams();
+  const teamA = teams.find((team) => team.id === parsed.data.teamAId);
+  const teamB = teams.find((team) => team.id === parsed.data.teamBId);
 
   if (!teamA || !teamB) {
     return Response.json({ error: "Teams are invalid." }, { status: 400 });
@@ -41,13 +40,8 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
 
-  const match = buildMatch(parsed.data, store.teams);
-
-  await updateStore((current) => ({
-    ...current,
-    matches: [match, ...current.matches],
-  }));
+  const match = buildMatch(parsed.data, teams);
+  await matchRepository.createMatch(match);
 
   return Response.json({ match }, { status: 201 });
 }
-
