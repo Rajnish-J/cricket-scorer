@@ -17,7 +17,14 @@ export async function postJson<T>(url: string, payload: unknown): Promise<T> {
 
   const result = (await response.json()) as T;
   if (!response.ok) {
-    throw new Error((result as { error?: string }).error ?? "Request failed");
+    const apiError = (result as { error?: unknown }).error;
+    if (typeof apiError === "string") {
+      throw new Error(apiError);
+    }
+    if (apiError && typeof apiError === "object") {
+      throw new Error(JSON.stringify(apiError));
+    }
+    throw new Error("Request failed");
   }
 
   return result;

@@ -7,10 +7,10 @@ import type { Match, MatchStatus } from "@/types/scorer";
 
 interface MatchRow {
   id: string;
-  createdAt: Date;
-  updatedAt: Date;
-  startedAt: Date;
-  completedAt: Date | null;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+  startedAt: Date | string;
+  completedAt: Date | string | null;
   status: MatchStatus;
   format: Match["format"];
   overs: number;
@@ -24,13 +24,18 @@ interface MatchRow {
   winnerTeamId: string | null;
 }
 
+function toIsoTimestamp(value: Date | string): string {
+  const date = value instanceof Date ? value : new Date(value);
+  return date.toISOString();
+}
+
 function mapRowToMatch(row: MatchRow): Match {
   return MatchSchema.parse({
     ...row,
-    createdAt: row.createdAt.toISOString(),
-    updatedAt: row.updatedAt.toISOString(),
-    startedAt: row.startedAt.toISOString(),
-    completedAt: row.completedAt ? row.completedAt.toISOString() : null,
+    createdAt: toIsoTimestamp(row.createdAt),
+    updatedAt: toIsoTimestamp(row.updatedAt),
+    startedAt: toIsoTimestamp(row.startedAt),
+    completedAt: row.completedAt ? toIsoTimestamp(row.completedAt) : null,
   });
 }
 

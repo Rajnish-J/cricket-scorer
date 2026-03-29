@@ -11,10 +11,15 @@ interface TeamWithPlayersRows {
   teamId: string;
   teamName: string;
   teamShortName: string;
-  teamCreatedAt: Date;
+  teamCreatedAt: Date | string;
   playerId: string | null;
   playerName: string | null;
   playerRole: Player["role"] | null;
+}
+
+function toIsoTimestamp(value: Date | string): string {
+  const date = value instanceof Date ? value : new Date(value);
+  return date.toISOString();
 }
 
 function mapRowsToTeams(rows: TeamWithPlayersRows[]): Team[] {
@@ -27,7 +32,7 @@ function mapRowsToTeams(rows: TeamWithPlayersRows[]): Team[] {
         id: row.teamId,
         name: row.teamName,
         shortName: row.teamShortName,
-        createdAt: row.teamCreatedAt.toISOString(),
+        createdAt: toIsoTimestamp(row.teamCreatedAt),
         players: [],
       });
     }
