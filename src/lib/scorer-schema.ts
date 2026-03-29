@@ -33,7 +33,7 @@ export const TeamSchema = z
     id: z.string().min(1),
     name: z.string().trim().min(2),
     shortName: z.string().trim().min(2).max(6),
-    players: z.array(PlayerSchema),
+    players: z.array(PlayerSchema).max(11),
     createdAt: z.string().datetime({ offset: true }),
   })
   .strict();
@@ -134,7 +134,14 @@ export const TeamCreateSchema = z
           .strict()
       )
       .min(2, "At least 2 players are required")
-      .max(30, "At most 30 players are allowed"),
+      .max(11, "At most 11 players are allowed"),
+  })
+  .strict();
+
+export const TeamPlayerCreateSchema = z
+  .object({
+    name: z.string().trim().min(2, "Player name is required"),
+    role: PlayerRoleSchema.default("batter"),
   })
   .strict();
 
@@ -175,5 +182,6 @@ export const ScoreEventSchema = z
   });
 
 export type TeamCreateInput = z.infer<typeof TeamCreateSchema>;
+export type TeamPlayerCreateInput = z.infer<typeof TeamPlayerCreateSchema>;
 export type MatchCreateInput = z.infer<typeof MatchCreateSchema>;
 export type ScoreEventInput = z.infer<typeof ScoreEventSchema>;
