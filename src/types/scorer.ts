@@ -1,101 +1,32 @@
-﻿export type MatchFormat = "T10" | "T20" | "ODI" | "TEST" | "CUSTOM";
+﻿import { z } from "zod";
 
-export type MatchStatus = "scheduled" | "live" | "completed";
+import {
+  BallEventSchema,
+  CricketStoreSchema,
+  ExtraTypeSchema,
+  InningsStateSchema,
+  MatchFormatSchema,
+  MatchSchema,
+  MatchStatusSchema,
+  PlayerAggregateStatsSchema,
+  PlayerRoleSchema,
+  PlayerSchema,
+  TeamSchema,
+  TossDecisionSchema,
+  WicketTypeSchema,
+} from "@/lib/scorer-schema";
 
-export type ExtraType = "none" | "wide" | "no-ball" | "bye" | "leg-bye";
+export type MatchFormat = z.infer<typeof MatchFormatSchema>;
+export type MatchStatus = z.infer<typeof MatchStatusSchema>;
+export type ExtraType = z.infer<typeof ExtraTypeSchema>;
+export type WicketType = z.infer<typeof WicketTypeSchema>;
+export type TossDecision = z.infer<typeof TossDecisionSchema>;
+export type PlayerRole = z.infer<typeof PlayerRoleSchema>;
 
-export type WicketType =
-  | "bowled"
-  | "caught"
-  | "lbw"
-  | "run-out"
-  | "stumped"
-  | "hit-wicket"
-  | "retired-out";
-
-export interface Player {
-  id: string;
-  name: string;
-  role: "batter" | "bowler" | "all-rounder" | "wicket-keeper";
-}
-
-export interface Team {
-  id: string;
-  name: string;
-  shortName: string;
-  players: Player[];
-  createdAt: string;
-}
-
-export interface BallEvent {
-  id: string;
-  inningsNumber: 1 | 2;
-  over: number;
-  ballInOver: number;
-  runsOffBat: number;
-  extraRuns: number;
-  extraType: ExtraType;
-  isWicket: boolean;
-  wicketType: WicketType | null;
-  strikerId: string;
-  nonStrikerId: string;
-  bowlerId: string;
-  totalRuns: number;
-  createdAt: string;
-}
-
-export interface InningsState {
-  battingTeamId: string;
-  bowlingTeamId: string;
-  oversLimit: number;
-  runs: number;
-  wickets: number;
-  legalBalls: number;
-  completed: boolean;
-  strikerId: string;
-  nonStrikerId: string;
-  currentBowlerId: string;
-  yetToBatIds: string[];
-  balls: BallEvent[];
-}
-
-export interface Match {
-  id: string;
-  createdAt: string;
-  updatedAt: string;
-  startedAt: string;
-  completedAt: string | null;
-  status: MatchStatus;
-  format: MatchFormat;
-  overs: number;
-  venue: string;
-  tossWinnerTeamId: string;
-  tossDecision: "bat" | "bowl";
-  teamAId: string;
-  teamBId: string;
-  target: number | null;
-  innings: [InningsState, InningsState];
-  winnerTeamId: string | null;
-}
-
-export interface PlayerAggregateStats {
-  playerId: string;
-  matches: number;
-  battingRuns: number;
-  battingBalls: number;
-  fours: number;
-  sixes: number;
-  outs: number;
-  wickets: number;
-  bowlingBalls: number;
-  bowlingRuns: number;
-  catches: number;
-  stumpings: number;
-  runOuts: number;
-}
-
-export interface CricketStore {
-  teams: Team[];
-  matches: Match[];
-}
-
+export type Player = z.infer<typeof PlayerSchema>;
+export type Team = z.infer<typeof TeamSchema>;
+export type BallEvent = z.infer<typeof BallEventSchema>;
+export type InningsState = z.infer<typeof InningsStateSchema>;
+export type Match = z.infer<typeof MatchSchema>;
+export type PlayerAggregateStats = z.infer<typeof PlayerAggregateStatsSchema>;
+export type CricketStore = z.infer<typeof CricketStoreSchema>;

@@ -2,6 +2,7 @@
 
 import { db } from "@/db/client";
 import { matchesTable } from "@/db/schema";
+import { MatchSchema } from "@/lib/scorer-schema";
 import type { Match, MatchStatus } from "@/types/scorer";
 
 interface MatchRow {
@@ -24,13 +25,13 @@ interface MatchRow {
 }
 
 function mapRowToMatch(row: MatchRow): Match {
-  return {
+  return MatchSchema.parse({
     ...row,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
     startedAt: row.startedAt.toISOString(),
     completedAt: row.completedAt ? row.completedAt.toISOString() : null,
-  };
+  });
 }
 
 export const matchRepository = {
@@ -45,23 +46,25 @@ export const matchRepository = {
   },
 
   async createMatch(match: Match): Promise<void> {
+    const safeMatch = MatchSchema.parse(match);
+
     await db.insert(matchesTable).values({
-      id: match.id,
-      status: match.status,
-      format: match.format,
-      overs: match.overs,
-      venue: match.venue,
-      tossWinnerTeamId: match.tossWinnerTeamId,
-      tossDecision: match.tossDecision,
-      teamAId: match.teamAId,
-      teamBId: match.teamBId,
-      target: match.target,
-      innings: match.innings,
-      winnerTeamId: match.winnerTeamId,
-      createdAt: new Date(match.createdAt),
-      startedAt: new Date(match.startedAt),
-      completedAt: match.completedAt ? new Date(match.completedAt) : null,
-      updatedAt: new Date(match.updatedAt),
+      id: safeMatch.id,
+      status: safeMatch.status,
+      format: safeMatch.format,
+      overs: safeMatch.overs,
+      venue: safeMatch.venue,
+      tossWinnerTeamId: safeMatch.tossWinnerTeamId,
+      tossDecision: safeMatch.tossDecision,
+      teamAId: safeMatch.teamAId,
+      teamBId: safeMatch.teamBId,
+      target: safeMatch.target,
+      innings: safeMatch.innings,
+      winnerTeamId: safeMatch.winnerTeamId,
+      createdAt: new Date(safeMatch.createdAt),
+      startedAt: new Date(safeMatch.startedAt),
+      completedAt: safeMatch.completedAt ? new Date(safeMatch.completedAt) : null,
+      updatedAt: new Date(safeMatch.updatedAt),
     });
   },
 
@@ -80,16 +83,18 @@ export const matchRepository = {
   },
 
   async updateMatch(match: Match): Promise<void> {
+    const safeMatch = MatchSchema.parse(match);
+
     await db
       .update(matchesTable)
       .set({
-        status: match.status,
-        target: match.target,
-        innings: match.innings,
-        winnerTeamId: match.winnerTeamId,
-        completedAt: match.completedAt ? new Date(match.completedAt) : null,
-        updatedAt: new Date(match.updatedAt),
+        status: safeMatch.status,
+        target: safeMatch.target,
+        innings: safeMatch.innings,
+        winnerTeamId: safeMatch.winnerTeamId,
+        completedAt: safeMatch.completedAt ? new Date(safeMatch.completedAt) : null,
+        updatedAt: new Date(safeMatch.updatedAt),
       })
-      .where(eq(matchesTable.id, match.id));
+      .where(eq(matchesTable.id, safeMatch.id));
   },
 };

@@ -1,6 +1,7 @@
 ﻿import { and, asc, eq, sql } from "drizzle-orm";
 
 import { db } from "@/db/client";
+import { PlayerSchema, TeamSchema } from "@/lib/scorer-schema";
 import { playersTable, teamsTable } from "@/db/schema";
 import { createId } from "@/lib/id";
 import type { TeamCreateInput } from "@/lib/scorer-schema";
@@ -33,15 +34,17 @@ function mapRowsToTeams(rows: TeamWithPlayersRows[]): Team[] {
 
     if (row.playerId && row.playerName && row.playerRole) {
       const team = teamMap.get(row.teamId);
-      team?.players.push({
-        id: row.playerId,
-        name: row.playerName,
-        role: row.playerRole,
-      });
+      team?.players.push(
+        PlayerSchema.parse({
+          id: row.playerId,
+          name: row.playerName,
+          role: row.playerRole,
+        })
+      );
     }
   }
 
-  return Array.from(teamMap.values());
+  return Array.from(teamMap.values()).map((team) => TeamSchema.parse(team));
 }
 
 export const teamRepository = {
@@ -130,6 +133,10 @@ export const teamRepository = {
       .where(and(eq(playersTable.id, playerId), eq(playersTable.teamId, teamId)))
       .limit(1);
 
-    return row[0] ?? null;
+    if (!row[0]) {
+      return null;
+    }
+
+    return PlayerSchema.parse(row[0]);
   },
 };
