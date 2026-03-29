@@ -8,7 +8,7 @@
   WicketType,
 } from "@/types/scorer";
 import type { MatchCreateInput, ScoreEventInput } from "@/lib/scorer-schema";
-import { createId } from "@/lib/store";
+import { createId } from "@/lib/id";
 
 function isLegalDelivery(extraType: BallEvent["extraType"]): boolean {
   return extraType !== "wide" && extraType !== "no-ball";
@@ -296,7 +296,7 @@ export function recordBall(
 
   match.updatedAt = new Date().toISOString();
 
-  if (match.innings[0].completed && match.innings[1].completed && match.status !== "completed") {
+  if (match.innings[0].completed && match.innings[1].completed) {
     concludeMatch(match);
   }
 
