@@ -1,4 +1,9 @@
-# Frontend Component Development Guidelines
+---
+name: frontend-engineer
+description: Frontend implementation rules and architecture conventions for building UI components and pages in this repository.
+metadata:
+  short-description: Frontend architecture and coding rules
+---
 
 ## General Architecture Rules
 
