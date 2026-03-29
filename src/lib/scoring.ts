@@ -129,10 +129,9 @@ function startSecondInnings(match: Match, teams: Team[]): void {
 
 function shouldEndInnings(
   innings: InningsState,
-  opposingTarget: number | null,
-  teamPlayerCount: number
+  opposingTarget: number | null
 ): boolean {
-  if (innings.wickets >= Math.max(0, teamPlayerCount - 1)) {
+  if (innings.wickets >= 10) {
     return true;
   }
 
@@ -218,6 +217,14 @@ export function recordBall(
     return { ok: false, message: "Current innings is already completed." };
   }
 
+  const isStartOfNewOver = innings.legalBalls > 0 && innings.legalBalls % 6 === 0;
+  if (isStartOfNewOver) {
+    if (!payload.nextBowlerId) {
+      return { ok: false, message: "Select next bowler before starting the over." };
+    }
+    innings.currentBowlerId = payload.nextBowlerId;
+  }
+
   const currentBattingPlayers = getTeamPlayersByTeamId(teams, innings.battingTeamId);
   const legalDelivery = isLegalDelivery(payload.extraType);
   const previousLegalBalls = innings.legalBalls;
@@ -250,15 +257,26 @@ export function recordBall(
   if (payload.isWicket) {
     innings.wickets += 1;
 
-    if (innings.yetToBatIds.length > 0) {
+    if (innings.wickets < 10) {
       if (!payload.nextBatterId) {
         return {
           ok: false,
-          message: "Select next batter after wicket when players are available.",
+          message:
+            "Select next batter after wicket. If bench is empty, add a new player to team (max 11).",
         };
       }
 
-      const nextBatterExists = innings.yetToBatIds.includes(payload.nextBatterId);
+      const dismissedBatterIds = new Set(
+        innings.balls.filter((ball) => ball.isWicket).map((ball) => ball.strikerId)
+      );
+
+      const eligibleNextBatterIds = currentBattingPlayers
+        .map((player) => player.id)
+        .filter((playerId) => !dismissedBatterIds.has(playerId))
+        .filter((playerId) => playerId !== innings.nonStrikerId)
+        .filter((playerId) => playerId !== innings.strikerId);
+
+      const nextBatterExists = eligibleNextBatterIds.includes(payload.nextBatterId);
       if (!nextBatterExists) {
         return { ok: false, message: "Selected next batter is invalid." };
       }
@@ -277,14 +295,10 @@ export function recordBall(
   const overCompleted = legalDelivery && innings.legalBalls > 0 && innings.legalBalls % 6 === 0;
   if (overCompleted) {
     swapBatters(innings);
-
-    if (payload.nextBowlerId) {
-      innings.currentBowlerId = payload.nextBowlerId;
-    }
   }
 
   const targetForInnings = inningsIndex === 1 ? match.target : null;
-  if (shouldEndInnings(innings, targetForInnings, currentBattingPlayers.length)) {
+  if (shouldEndInnings(innings, targetForInnings)) {
     innings.completed = true;
 
     if (inningsIndex === 0) {

@@ -4,7 +4,7 @@ import { db } from "@/db/client";
 import { PlayerSchema, TeamSchema } from "@/lib/scorer-schema";
 import { playersTable, teamsTable } from "@/db/schema";
 import { createId } from "@/lib/id";
-import type { TeamCreateInput } from "@/lib/scorer-schema";
+import type { TeamCreateInput, TeamPlayerCreateInput } from "@/lib/scorer-schema";
 import type { Player, Team } from "@/types/scorer";
 
 interface TeamWithPlayersRows {
@@ -125,6 +125,35 @@ export const teamRepository = {
     });
 
     return this.getTeamById(teamId);
+  },
+
+  async addPlayerToTeam(
+    teamId: string,
+    input: TeamPlayerCreateInput
+  ): Promise<{ player: Player } | { error: "TEAM_NOT_FOUND" | "TEAM_FULL" }> {
+    const team = await this.getTeamById(teamId);
+    if (!team) {
+      return { error: "TEAM_NOT_FOUND" };
+    }
+
+    if (team.players.length >= 11) {
+      return { error: "TEAM_FULL" };
+    }
+
+    const player = PlayerSchema.parse({
+      id: createId("player"),
+      name: input.name,
+      role: input.role,
+    });
+
+    await db.insert(playersTable).values({
+      id: player.id,
+      teamId,
+      name: player.name,
+      role: player.role,
+    });
+
+    return { player };
   },
 
   async getPlayer(teamId: string, playerId: string): Promise<Player | null> {

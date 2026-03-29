@@ -140,6 +140,7 @@ export function TeamsContainer(): React.JSX.Element {
             <Button
               variant="outline"
               type="button"
+              disabled={teamPlayers.length >= 11}
               onClick={() =>
                 setTeamPlayers((previous) => [...previous, { ...defaultTeamPlayer }])
               }
